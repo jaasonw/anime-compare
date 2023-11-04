@@ -13,6 +13,10 @@
     "format": "prettier --plugin-search-dir . --write ."
   },
   "prettier": {
+    "plugins": [
+      "prettier-plugin-svelte",
+      "@trivago/prettier-plugin-sort-imports"
+    ],
     "importOrder": [
       "^@core/(.*)$",
       "^@server/(.*)$",
