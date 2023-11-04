@@ -4,8 +4,6 @@
   import * as Card from "$lib/components/ui/card";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { Sun, Moon } from "lucide-svelte";
-  import { toggleMode } from "mode-watcher";
 </script>
 
 <div class="flex flex-col items-center justify-center h-screen">
