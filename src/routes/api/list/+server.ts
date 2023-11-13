@@ -33,7 +33,7 @@ export async function POST({ request }) {
   };
   try {
     const { u1, u2 } = await request.json();
-    if ([u1, u2].filter((element) => element === undefined).length != 2) {
+    if ([u1, u2].filter((element) => element === undefined).length > 0) {
       throw new Error("incorrect number of username(s)");
     }
 
