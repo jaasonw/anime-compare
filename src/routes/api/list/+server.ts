@@ -1,12 +1,14 @@
 import Anilist, { type ListEntry } from "anilist-node";
-import { Connection, Database } from "duckdb-async";
+import type BetterSqlite3 from "better-sqlite3";
+import Database from "better-sqlite3";
 
 const anilist = new Anilist();
 
-async function getAniList(username: string | number, conn: Connection) {
-  const stmt = await conn.prepare(
-    "INSERT INTO anime VALUES (?, ?, ?, ?, ?, ?)",
-  );
+async function getAniList(
+  username: string | number,
+  conn: BetterSqlite3.Database,
+) {
+  const stmt = conn.prepare("INSERT INTO anime VALUES (?, ?, ?, ?, ?, ?)");
   const query = await anilist.lists.anime(username);
   const entries: ListEntry[] = [];
   query.forEach((e) => {
@@ -24,7 +26,6 @@ async function getAniList(username: string | number, conn: Connection) {
     const idMal = e.media.idMal?.toString() ?? "";
     stmt.run(username, title, score, url, status, idMal);
   });
-  await stmt.finalize();
 }
 
 export async function POST({ request }) {
@@ -36,25 +37,22 @@ export async function POST({ request }) {
     if ([u1, u2].filter((element) => element === undefined).length > 0) {
       throw new Error("incorrect number of username(s)");
     }
-
-    const db = await Database.create(":memory:");
-    await db.exec(`
+    const db = new Database(":memory:");
+    db.pragma("journal_mode = WAL");
+    db.exec(`
       CREATE TABLE "anime"(
         "username" VARCHAR(255),
         "title" VARCHAR(255),
         "score" INTEGER,
         "url" VARCHAR(255),
         "status" VARCHAR(255),
-        "idMal" VARCHAR(255),
+        "idMal" VARCHAR(255)
       );
     `);
 
-    await Promise.all([
-      getAniList(u1, await db.connect()),
-      getAniList(u2, await db.connect()),
-    ]);
+    await Promise.all([getAniList(u1, db), getAniList(u2, db)]);
 
-    const stmt = await db.prepare(`
+    const stmt = db.prepare(`
       SELECT *
       FROM anime AS e1
       WHERE e1.username = ?
@@ -65,8 +63,8 @@ export async function POST({ request }) {
         AND e2.idMal = e1.idMal
       ) order by title;
     `);
-    const result1 = await stmt.all(u1, u2);
-    const result2 = await stmt.all(u2, u1);
+    const result1 = stmt.all(u1, u2);
+    const result2 = stmt.all(u2, u1);
 
     return new Response(JSON.stringify({ u1: result1, u2: result2 }), options);
   } catch (e: unknown) {
