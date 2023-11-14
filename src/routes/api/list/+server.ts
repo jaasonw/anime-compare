@@ -48,7 +48,8 @@ export async function POST({ request }) {
       throw new Error("incorrect number of username(s)");
     }
     const db = new Database(":memory:");
-    db.pragma("journal_mode = WAL");
+    db.pragma("journal_mode = OFF");
+    db.pragma("synchronous = OFF");
     db.exec(`
       CREATE TABLE "anime"(
         "username" VARCHAR(255),
@@ -59,11 +60,18 @@ export async function POST({ request }) {
         "idMal" VARCHAR(255)
       );
     `);
+    db.exec(`CREATE INDEX idx_username_idMal ON anime (username, idMal);`);
 
     await Promise.all([getAniList(u1, db), getAniList(u2, db)]);
 
     const stmt = db.prepare(`
-      SELECT DISTINCT *
+      SELECT DISTINCT 
+        username,
+        title,
+        score,
+        url,
+        status,
+        idMal
       FROM anime AS e1
       WHERE e1.username = ?
       AND NOT EXISTS (
