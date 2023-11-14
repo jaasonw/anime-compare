@@ -24,7 +24,16 @@
       "^[./]"
     ],
     "importOrderSeparation": true,
-    "importOrderSortSpecifiers": true
+    "importOrderSortSpecifiers": true,
+    "printWidth": 100,
+    "overrides": [
+      {
+        "files": "*.svelte",
+        "options": {
+          "parser": "svelte"
+        }
+      }
+    ]
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^2.1.0",
